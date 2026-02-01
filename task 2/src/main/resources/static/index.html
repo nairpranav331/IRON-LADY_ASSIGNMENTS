@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Program Capacity & Readiness Management System</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <div class="appShell">
+        <header class="topBar">
+          <div class="topBarLeft">
+            <div class="brandMark" aria-hidden="true"></div>
+            <div>
+              <div class="topTitle">Program Capacity &amp; Readiness</div>
+              <div class="topSubtitle">Iron Lady — Internal Admin</div>
+            </div>
+          </div>
+          <div class="topBarRight">
+            <a class="ghostLink" href="#dashboard" id="homeLink">Dashboard</a>
+          </div>
+        </header>
+
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+        <main>
+          <section id="screenDashboard" class="screen" data-screen>
+            <div class="card">
+              <div class="cardHeader">
+                <h1 class="cardTitle">Program Dashboard</h1>
+                <button type="button" class="primaryBtn" id="createBtn">Create New Program</button>
+              </div>
+
+              <div class="tableWrap">
+                <table class="table" aria-label="Programs">
+                  <thead>
+                    <tr>
+                      <th>Program Name</th>
+                      <th>Duration</th>
+                      <th>Enrollment</th>
+                      <th>Mentor Count</th>
+                      <th>Readiness Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="programTableBody"></tbody>
+                </table>
+              </div>
+
+              <div id="emptyState" class="emptyState">
+                <div class="emptyTitle">No programs yet</div>
+                <div class="emptyText">Create your first program to start tracking capacity and readiness.</div>
+              </div>
+            </div>
+          </section>
+
+          <section id="screenForm" class="screen" data-screen hidden>
+            <div class="card">
+              <div class="cardHeader">
+                <h1 class="cardTitle" id="formTitle">Create Program</h1>
+                <button type="button" class="ghostBtn" id="formBackBtn">Back</button>
+              </div>
+
+              <form id="programForm" class="form">
+                <div class="fieldRow" id="fieldIdRow" hidden>
+                  <label class="label" for="programId">ID</label>
+                  <input class="input" id="programId" name="programId" type="text" readonly />
+                </div>
+
+                <div class="grid">
+                  <div class="fieldRow">
+                    <label class="label" for="programName">Program Name</label>
+                    <input class="input" id="programName" name="programName" type="text" required />
+                  </div>
+
+                  <div class="fieldRow">
+                    <label class="label" for="status">Status</label>
+                    <select class="input" id="status" name="status" required>
+                      <option value="Planned">Planned</option>
+                      <option value="Active">Active</option>
+                      <option value="Closed">Closed</option>
+                    </select>
+                  </div>
+
+                  <div class="fieldRow">
+                    <label class="label" for="startDate">Start Date</label>
+                    <input class="input" id="startDate" name="startDate" type="date" />
+                  </div>
+
+                  <div class="fieldRow">
+                    <label class="label" for="endDate">End Date</label>
+                    <input class="input" id="endDate" name="endDate" type="date" />
+                  </div>
+
+                  <div class="fieldRow">
+                    <label class="label" for="maxParticipants">Max Participants</label>
+                    <input class="input" id="maxParticipants" name="maxParticipants" type="number" min="1" required />
+                  </div>
+
+                  <div class="fieldRow">
+                    <label class="label" for="currentEnrollments">Current Enrollments</label>
+                    <input class="input" id="currentEnrollments" name="currentEnrollments" type="number" min="0" required />
+                  </div>
+
+                  <div class="fieldRow">
+                    <label class="label" for="assignedMentors">Assigned Mentors</label>
+                    <input class="input" id="assignedMentors" name="assignedMentors" type="number" min="1" required />
+                  </div>
+                </div>
+
+                <div class="buttonRow">
+                  <button type="submit" class="primaryBtn" id="saveBtn">Save</button>
+                  <button type="button" class="primaryBtn" id="updateBtn">Update</button>
+                  <button type="button" class="dangerBtn" id="deleteBtn">Delete</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <section id="screenDetail" class="screen" data-screen hidden>
+            <div class="card">
+              <div class="cardHeader">
+                <h1 class="cardTitle" id="detailTitle">Program Details</h1>
+                <button type="button" class="ghostBtn" id="detailBackBtn">Back</button>
+              </div>
+
+              <div class="detailGrid">
+                <div class="detailBlock">
+                  <div class="detailLabel">Status</div>
+                  <div class="detailValue" id="detailStatus"></div>
+                </div>
+                <div class="detailBlock">
+                  <div class="detailLabel">Duration</div>
+                  <div class="detailValue" id="detailDuration"></div>
+                </div>
+                <div class="detailBlock">
+                  <div class="detailLabel">Enrollment</div>
+                  <div class="detailValue" id="detailEnrollment"></div>
+                </div>
+                <div class="detailBlock">
+                  <div class="detailLabel">Mentor Count</div>
+                  <div class="detailValue" id="detailMentors"></div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panelHeader">
+                  <div class="panelTitle">Capacity</div>
+                  <div class="panelMeta" id="detailCapacityPct"></div>
+                </div>
+                <div class="bar" aria-label="Capacity utilization">
+                  <div class="barFill" id="capacityBarFill"></div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panelHeader">
+                  <div class="panelTitle">Readiness Status</div>
+                  <div class="panelMeta" id="detailMentorLoad"></div>
+                </div>
+                <div id="detailReadiness"></div>
+              </div>
+
+              <div class="panel">
+                <div class="panelHeader">
+                  <div class="panelTitle">AI Explanation</div>
+                  <div class="panelMeta" id="detailAiMeta"></div>
+                </div>
+                <div class="aiBox" id="detailAiText"></div>
+              </div>
+
+              <div class="buttonRow">
+                <button type="button" class="secondaryBtn" id="detailEditBtn">Edit Program</button>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <footer class="footer">Prototype internal tool. Readiness is rule-based; AI only explains the status.</footer>
+      </div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

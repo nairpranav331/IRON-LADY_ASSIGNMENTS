@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Iron Lady Leadership Readiness Assessment</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <div id="root"></div>
+    </div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="./aiService.js"></script>
+
+    <script type="text/babel">
+      const { useMemo, useState } = React;
+
+      function ProgressIndicator({ step, total }) {
+        const pct = Math.round((step / total) * 100);
+
+        return (
+          <div className="progressWrap" role="group" aria-label={`Step ${step} of ${total}`}>
+            <div className="progressTop">
+              <div className="progressLabel">
+                Step {step} of {total}
+              </div>
+              <div className="progressPct">{pct}%</div>
+            </div>
+            <div className="progressBar" aria-hidden="true">
+              <div className="progressFill" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        );
+      }
+
+      function QuestionCard({ title, options, value, onChange }) {
+        return (
+          <div className="card">
+            <h1 className="cardTitle">{title}</h1>
+
+            <div className="options" role="list">
+              {options.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  className={`optionBtn${value === opt ? " isSelected" : ""}`}
+                  onClick={() => onChange(opt)}
+                  aria-pressed={value === opt}
+                  role="listitem"
+                >
+                  <span className="optionText">{opt}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      function ResultCard({ result, isLoading, error, onRetry, onRestart }) {
+        if (isLoading) {
+          return (
+            <div className="card">
+              <h1 className="cardTitle">Analyzing your readiness...</h1>
+              <div className="statusRow" role="status" aria-live="polite">
+                <div className="spinner" aria-hidden="true" />
+                <div className="statusText">Creating your Iron Lady–specific readiness assessment.</div>
+              </div>
+            </div>
+          );
+        }
+
+        if (error) {
+          return (
+            <div className="card">
+              <h1 className="cardTitle">We couldn't generate your results</h1>
+              <div className="errorBox" role="alert">
+                {error}
+              </div>
+              <div className="navRow">
+                <button type="button" className="secondaryBtn" onClick={onRestart}>
+                  Retake
+                </button>
+                <button type="button" className="primaryBtn" onClick={onRetry}>
+                  Try Again
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        if (!result) {
+          return (
+            <div className="card">
+              <h1 className="cardTitle">Your Leadership Readiness</h1>
+              <div className="statusText">No result available.</div>
+              <button type="button" className="linkBtn" onClick={onRestart}>
+                Retake assessment
+              </button>
+            </div>
+          );
+        }
+
+        const score = typeof result.score === "number" ? result.score : Number(result.score);
+        const safeScore = Number.isFinite(score) ? score : 0;
+
+        return (
+          <div className="card">
+            <h1 className="cardTitle">Your Leadership Readiness</h1>
+
+            <div className="resultGrid">
+              <div
+                className="scoreCard"
+                role="group"
+                aria-label={`Leadership Readiness Score ${safeScore} percent`}
+              >
+                <div className="scoreNumber">{safeScore}%</div>
+                <div className="scoreLabel">Readiness Score</div>
+                <div className="scoreBadge">{result.label}</div>
+              </div>
+
+              <div className="resultBody">
+                <p className="insight">{result.insight}</p>
+
+                <div className="programBlock">
+                  <div className="programLabel">Recommended Program</div>
+                  <div className="programName">{result.program}</div>
+                </div>
+
+                {Array.isArray(result.why) && result.why.length > 0 && (
+                  <div className="whyBlock">
+                    <div className="whyTitle">Why this is a strong fit</div>
+                    <ul className="whyList">
+                      {result.why.map((item, idx) => (
+                        <li key={`${idx}-${item}`}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {result.nextStep && (
+                  <div className="nextStepCallout">
+                    <div className="nextStepLabel">Next step</div>
+                    <div className="nextStepText">{result.nextStep}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="ctaRow">
+              <button
+                type="button"
+                className="primaryBtn"
+                onClick={() =>
+                  window.alert(`Prototype only: Application flow for "${result.program}" will be connected later.`)
+                }
+              >
+                Apply for This Program
+              </button>
+              <button
+                type="button"
+                className="secondaryBtn"
+                onClick={() => window.alert("Prototype only: Advisor booking will be connected later.")}
+              >
+                Speak to an Iron Lady Advisor
+              </button>
+            </div>
+
+            <button type="button" className="linkBtn" onClick={onRestart}>
+              Retake assessment
+            </button>
+          </div>
+        );
+      }
+
+      function Landing({ onStart }) {
+        return (
+          <div className="card landingCard">
+            <div className="brand">Iron Lady</div>
+            <h1 className="landingTitle">Iron Lady Leadership Readiness Assessment</h1>
+            <p className="landingSubtitle">
+              Understand your leadership readiness and find the right Iron Lady program for your career stage.
+            </p>
+            <button type="button" className="primaryBtn" onClick={onStart}>
+              Start Assessment
+            </button>
+          </div>
+        );
+      }
+
+      function App() {
+        const questions = useMemo(
+          () => [
+            {
+              key: "careerStage",
+              title: "Which best describes your current career stage?",
+              options: ["Individual Contributor", "Mid-Level Manager", "Senior Leader", "Career Break / Restart"],
+            },
+            {
+              key: "experienceYears",
+              title: "How many years of professional experience do you have?",
+              options: ["0–3", "4–7", "8–12", "12+"],
+            },
+            {
+              key: "influence",
+              title: "How often do you influence decisions at work?",
+              options: ["Rarely", "Sometimes", "Often", "I lead key decisions"],
+            },
+            {
+              key: "challenge",
+              title: "What is your biggest challenge right now?",
+              options: ["Confidence & self-belief", "Visibility & recognition", "Leadership skills", "Career clarity"],
+            },
+            {
+              key: "aspiration",
+              title: "What do you want to achieve in the next 12 months?",
+              options: ["Promotion", "Leadership role", "Career clarity", "Board / Business growth"],
+            },
+          ],
+          []
+        );
+
+        const totalSteps = questions.length;
+        const [step, setStep] = useState(0);
+        const [answers, setAnswers] = useState(() => ({}));
+        const [aiResult, setAiResult] = useState(null);
+        const [isAnalyzing, setIsAnalyzing] = useState(false);
+        const [aiError, setAiError] = useState("");
+
+        const onStart = () => setStep(1);
+
+        const onRestart = () => {
+          setAnswers({});
+          setAiResult(null);
+          setAiError("");
+          setIsAnalyzing(false);
+          setStep(0);
+        };
+
+        const isQuestionStep = step >= 1 && step <= totalSteps;
+        const isResultStep = step === totalSteps + 1;
+
+        const currentQuestion = isQuestionStep ? questions[step - 1] : null;
+        const currentValue = currentQuestion ? answers[currentQuestion.key] : null;
+
+        const setAnswer = (value) => {
+          if (!currentQuestion) return;
+          setAnswers((prev) => ({ ...prev, [currentQuestion.key]: value }));
+        };
+
+        const goBack = () => setStep((s) => Math.max(0, s - 1));
+
+        const runAiAssessment = async () => {
+          if (isAnalyzing) return;
+
+          const payload = {
+            careerStage: answers.careerStage,
+            experience: answers.experienceYears,
+            influence: answers.influence,
+            challenge: answers.challenge,
+            goal: answers.aspiration,
+          };
+
+          setStep(totalSteps + 1);
+          setAiResult(null);
+          setAiError("");
+          setIsAnalyzing(true);
+
+          try {
+            const result = await window.aiService.assessLeadershipReadiness(payload);
+            setAiResult(result);
+          } catch (e) {
+            setAiError(e && e.message ? e.message : "AI assessment failed.");
+          } finally {
+            setIsAnalyzing(false);
+          }
+        };
+
+        const goNext = () => {
+          if (!currentQuestion) return;
+          if (!answers[currentQuestion.key]) return;
+
+          if (step < totalSteps) {
+            setStep(step + 1);
+            return;
+          }
+
+          runAiAssessment();
+        };
+
+        return (
+          <div className="appShell">
+            <div className="topBar">
+              <div className="topBarLeft">
+                <div className="topBarMark" aria-hidden="true" />
+                <div className="topBarTitle">Leadership Readiness Assessment</div>
+              </div>
+              <button type="button" className="ghostBtn" onClick={onRestart}>
+                Reset
+              </button>
+            </div>
+
+            {isQuestionStep && <ProgressIndicator step={step} total={totalSteps} />}
+
+            <div className="screen" key={step}>
+              {step === 0 && <Landing onStart={onStart} />}
+
+              {isQuestionStep && (
+                <>
+                  <QuestionCard
+                    title={currentQuestion.title}
+                    options={currentQuestion.options}
+                    value={currentValue}
+                    onChange={setAnswer}
+                  />
+
+                  <div className="navRow">
+                    <button type="button" className="secondaryBtn" onClick={goBack}>
+                      Back
+                    </button>
+
+                    <button type="button" className="primaryBtn" onClick={goNext} disabled={!currentValue}>
+                      {step === totalSteps ? "Analyze My Readiness" : "Continue"}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {isResultStep && (
+                <>
+                  <ProgressIndicator step={totalSteps} total={totalSteps} />
+                  <ResultCard
+                    result={aiResult}
+                    isLoading={isAnalyzing}
+                    error={aiError}
+                    onRetry={runAiAssessment}
+                    onRestart={onRestart}
+                  />
+                </>
+              )}
+            </div>
+
+            <div className="footerNote">Prototype demo. AI results require the local server + API key.</div>
+          </div>
+        );
+      }
+
+      const rootEl = document.getElementById("root");
+      const root = ReactDOM.createRoot ? ReactDOM.createRoot(rootEl) : null;
+
+      if (root) {
+        root.render(<App />);
+      } else {
+        ReactDOM.render(<App />, rootEl);
+      }
+    </script>
+  </body>
+</html>
