@@ -9,7 +9,7 @@ This repository contains both tasks submitted as part of the Iron Lady assignmen
 - Built using HTML, CSS, JavaScript (light React)
 
 📁 Folder: task 1  
-🎥 Demo shown in submitted video
+🎥 Demo 1: https://drive.google.com/file/d/1UVdAVpWRXkasG6da45ua21YODZYZ8ws9/view?usp=drive_link
 
 ## Task 2 – Internal Business Automation
 - Internal tool to manage program capacity and readiness
@@ -19,7 +19,7 @@ This repository contains both tasks submitted as part of the Iron Lady assignmen
 - Database: H2 (in-memory)
 
 📁 Folder: task 2  
-🎥 Demo shown in submitted video
+🎥 Demo 2 : https://drive.google.com/file/d/11Xwq6OpbZgx4MTwoMew7edO_IfXQUqpo/view?usp=drive_link
 
 ## Note
 The complete working flow of both tasks is demonstrated in the demo videos.
